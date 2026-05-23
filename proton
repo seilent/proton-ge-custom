@@ -2285,14 +2285,18 @@ class Session:
                 # https://github.com/microsoft/mimalloc/issues/958
                 self.env["MIMALLOC_DISABLE_REDIRECT"] = "1"
 
-            if not 'FEX_APP_CONFIG' in self.env:
-                # custom per-app config driven by Steam env vars
-                app_config = self.generate_fex_app_config()
-                with open(g_compatdata.fex_config_file, 'w') as f:
-                    f.write(json.dumps(app_config, indent=2))
-                self.env['FEX_APP_CONFIG'] = g_compatdata.fex_config_file
+            # Only set FEX config overrides when native ARM64 wine is present.
+            # When using x86_64 wine through FEX+binfmt, these overrides break
+            # FEXServer socket resolution inside pressure-vessel containers.
+            if file_exists(g_proton.path("files/bin-arm64/"), follow_symlinks=True):
+                if not 'FEX_APP_CONFIG' in self.env:
+                    # custom per-app config driven by Steam env vars
+                    app_config = self.generate_fex_app_config()
+                    with open(g_compatdata.fex_config_file, 'w') as f:
+                        f.write(json.dumps(app_config, indent=2))
+                    self.env['FEX_APP_CONFIG'] = g_compatdata.fex_config_file
 
-            self.env["FEX_APP_CONFIG_LOCATION"] = os.path.join(g_proton.dist_dir, "share/fex-emu/")
+                self.env["FEX_APP_CONFIG_LOCATION"] = os.path.join(g_proton.dist_dir, "share/fex-emu/")
 
     def run_proc(self, args, local_env=None):
         if local_env is None:
