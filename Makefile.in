@@ -1820,7 +1820,7 @@ endif
 CROSS_PLATFORM_ARGS :=
 ifeq ($(TARGET_ARCH),arm64)
   ifneq ($(shell uname -m),aarch64)
-    CROSS_PLATFORM_ARGS := --platform linux/arm64 --entrypoint /usr/bin/env --memory=32g --cpus=8
+    CROSS_PLATFORM_ARGS := --platform linux/arm64 --entrypoint /usr/bin/env --memory=24g --cpus=8
   endif
 endif
 
