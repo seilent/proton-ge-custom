@@ -1816,10 +1816,11 @@ ifeq ($(CONTAINER_ENGINE),)
 endif
 
 # When cross-compiling arm64 on x86_64, add --platform and bypass tini entrypoint
+# Also limit resources since QEMU user-mode is very heavy
 CROSS_PLATFORM_ARGS :=
 ifeq ($(TARGET_ARCH),arm64)
   ifneq ($(shell uname -m),aarch64)
-    CROSS_PLATFORM_ARGS := --platform linux/arm64 --entrypoint /usr/bin/env
+    CROSS_PLATFORM_ARGS := --platform linux/arm64 --entrypoint /usr/bin/env --memory=32g --cpus=8
   endif
 endif
 
