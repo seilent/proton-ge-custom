@@ -50,13 +50,21 @@ CONTAINER_MOUNT_OPTS=""
 
 check_container_engine() {
     stat "Trying $1."
-    if ! cmd $1 run --rm $2; then
+
+    # When cross-compiling (arm64 image on x86_64 host), we need --platform
+    # and must bypass tini entrypoint which fails under QEMU user-mode.
+    local platform_args=()
+    if [[ $2 == *arm64* ]] && [[ "$(uname -m)" != "aarch64" ]]; then
+        platform_args=(--platform linux/arm64 --entrypoint /usr/bin/env)
+    fi
+
+    if ! cmd $1 run "${platform_args[@]}" --rm $2 true; then
         info "$1 is unable to run the container."
         return 1
     fi
 
     touch permission_check
-    local inner_uid="$($1 run -v "$(pwd):/test$CONTAINER_MOUNT_OPTS" \
+    local inner_uid="$($1 run "${platform_args[@]}" -v "$(pwd):/test$CONTAINER_MOUNT_OPTS" \
                                             --rm $2 \
                                             stat --format "%u" /test/permission_check 2>&1)"
     rm permission_check

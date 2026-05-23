@@ -1815,7 +1815,15 @@ ifeq ($(CONTAINER_ENGINE),)
 	CONTAINER_ENGINE := docker
 endif
 
-DOCKER_BASE = $(CONTAINER_ENGINE) run --rm -v $(SRC):$(SRC)$(CONTAINER_MOUNT_OPTS) -v $(OBJ):$(OBJ)$(CONTAINER_MOUNT_OPTS) \
+# When cross-compiling arm64 on x86_64, add --platform and bypass tini entrypoint
+CROSS_PLATFORM_ARGS :=
+ifeq ($(TARGET_ARCH),arm64)
+  ifneq ($(shell uname -m),aarch64)
+    CROSS_PLATFORM_ARGS := --platform linux/arm64 --entrypoint /usr/bin/env
+  endif
+endif
+
+DOCKER_BASE = $(CONTAINER_ENGINE) run --rm $(CROSS_PLATFORM_ARGS) -v $(SRC):$(SRC)$(CONTAINER_MOUNT_OPTS) -v $(OBJ):$(OBJ)$(CONTAINER_MOUNT_OPTS) \
                 -w $(OBJ) -e MAKEFLAGS \
                 $(DOCKER_OPTS) $(STEAMRT_IMAGE)
 
